@@ -6,6 +6,8 @@
 
 #include <types.h>
 
+#include <errno.h>
+
 int errno;
 
 void itoa(int a, char *b)
@@ -43,3 +45,72 @@ int strlen(char *a)
   return i;
 }
 
+int gettime() {
+  int ret;
+
+  __asm__ __volatile__(
+    "int $0x80 \t\n"
+    : "=g" (ret)
+    : "a" (10)
+  );
+
+  if (ret < 0) {
+    errno = -ret;
+    ret = -1; 
+  }
+
+  return ret;
+}
+
+int write(int fd, char* buffer, int size) {
+  int ret;
+
+  __asm__ __volatile__(
+    "int $0x80 \t\n"
+    : "=g" (ret)
+    : "a" (4), "b" (fd), "c" (buffer), "d" (size)
+  );
+
+  if (ret < 0) {
+    errno = -ret;
+    ret = -1; 
+  }
+
+  return ret;
+}
+
+void perror() {
+  switch (errno) {
+    case ENOSYS:
+      write(1, "Function not implemented", sizeof("Function not implemented"));
+    break;
+
+    case EBADF:
+      write(1, "Bad file descriptor", sizeof("Bad file descriptor"));
+    break;
+
+    case EACCES:
+      write(1, "Permission denied", sizeof("Permission denied"));
+    break;
+
+    case EFAULT:
+      write(1, "Bad address", sizeof("Bad address"));
+    break;
+
+    case EINVAL:
+      write(1, "Invalid argument", sizeof("Invalid argument"));
+    break;
+
+    case ENOMEM:
+      write(1, "Out of memory", sizeof("Out of memory"));
+    break;
+
+    case ESRCH:
+      write(1, "No such process", sizeof("No such process"));
+    break;
+    
+    default:
+      write(1, "Unknown error", sizeof("Unknown error"));
+    break;
+  }
+}
