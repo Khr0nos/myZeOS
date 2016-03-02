@@ -50,10 +50,10 @@ int sys_write(int fd, char* buffer, int size) {
     char sysbuff[512];
     while (ret < size) {
         int n = (512 > (size - ret)) ? size - ret: 512;
-        ret = copy_from_user(buffer, sysbuff, n);
-        if (ret < 0) return ret;
-        ret = sys_write_console(sysbuff, n);
-        ret += n;
+        int res = copy_from_user(buffer, sysbuff, n);
+        if (res < 0) return ret;
+        res = sys_write_console(sysbuff, n);
+        ret += res;
     }
     return ret;
 }
