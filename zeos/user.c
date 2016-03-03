@@ -11,7 +11,7 @@ int __attribute__ ((__section__(".text.main")))
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
     int ret = write(1, " Prova de write", strlen(" Prova de write"));
     if (ret < 0) perror();
-    //runjp_rank(0,9);
+    runjp_rank(0,9);
   	while(1);
   	return 0;
 }
