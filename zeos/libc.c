@@ -82,35 +82,23 @@ int write(int fd, char* buffer, int size) {
 void perror() {
   switch (errno) {
     case ENOSYS:
-      write(1, "Function not implemented", sizeof("Function not implemented"));
+      write(1, "Function not implemented", strlen("Function not implemented"));
     break;
 
     case EBADF:
-      write(1, "Bad file descriptor", sizeof("Bad file descriptor"));
-    break;
-
-    case EACCES:
-      write(1, "Permission denied", sizeof("Permission denied"));
+      write(1, "Bad file descriptor", strlen("Bad file descriptor"));
     break;
 
     case EFAULT:
-      write(1, "Bad address", sizeof("Bad address"));
+      write(1, "Bad address", strlen("Bad address"));
     break;
 
     case EINVAL:
-      write(1, "Invalid argument", sizeof("Invalid argument"));
-    break;
-
-    case ENOMEM:
-      write(1, "Out of memory", sizeof("Out of memory"));
-    break;
-
-    case ESRCH:
-      write(1, "No such process", sizeof("No such process"));
+      write(1, "Invalid argument", strlen("Invalid argument"));
     break;
     
     default:
-      write(1, "Unknown error", sizeof("Unknown error"));
+      write(1, "Unknown error", strlen("Unknown error"));
     break;
   }
 }

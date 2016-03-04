@@ -17,6 +17,7 @@
 
 #define LECTURA 0
 #define ESCRIPTURA 1
+#define buff_size 512
 int zeos_ticks;
 
 int check_fd(int fd, int permissions)
@@ -47,9 +48,9 @@ int sys_write(int fd, char* buffer, int size) {
     if (size < 0) return -EINVAL;
 
     ret = 0;
-    char sysbuff[512];
+    char sysbuff[buff_size];
     while (ret < size) {
-        int n = (512 > (size - ret)) ? size - ret: 512;
+        int n = (buff_size > (size - ret)) ? size - ret: buff_size;
         int res = copy_from_user(buffer, sysbuff, n);
         if (res < 0) return ret;
         res = sys_write_console(sysbuff, n);
