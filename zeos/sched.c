@@ -1,5 +1,5 @@
 /*
- * sched.c - initializes struct for task 0 anda task 1
+ * sched.c - initializes struct for task 0 and task 1
  */
 
 #include <sched.h>
@@ -15,15 +15,16 @@ union task_union protected_tasks[NR_TASKS+2]
 
 union task_union *task = &protected_tasks[1]; /* == union task_union task[NR_TASKS] */
 
-#if 0
+
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
   return list_entry( l, struct task_struct, list);
 }
-#endif
 
+struct task_struct *idle_task;
 extern struct list_head blocked;
-
+struct list_head freequeue;
+struct list_head readyqueue;
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -59,9 +60,20 @@ void cpu_idle(void)
 	}
 }
 
-void init_idle (void)
-{
-
+void init_idle (void) {
+	struct list_head *idle = list_first(&freequeue);
+	list_del(&freequeue);
+	struct task_struct *pcb = list_head_to_task_struct(idle);
+	union task_union *aux = (union task_union*)pcb;
+	pcb->PID = 0;
+	allocate_DIR(pcb);
+	unsigned long *stack = (unsigned long *)aux + 0x1000;
+	--stack;
+	*stack = (unsigned long *)cpu_idle;
+	--stack;
+	*stack = 0;
+	pcb->kernel_esp = stack;
+	idle_task = pcb;
 }
 
 void init_task1(void)
@@ -70,7 +82,12 @@ void init_task1(void)
 
 
 void init_sched(){
-
+	INIT_LIST_HEAD(&freequeue);
+	int i;
+	for (i = 0; i < NR_TASKS; i++) {
+		list_add(&(task[i].task.list), &freequeue);
+	}
+	INIT_LIST_HEAD(&readyqueue);
 }
 
 struct task_struct* current()
