@@ -62,22 +62,33 @@ void cpu_idle(void)
 
 void init_idle (void) {
 	struct list_head *idle = list_first(&freequeue);
-	list_del(&freequeue);
+	list_del(idle);
 	struct task_struct *pcb = list_head_to_task_struct(idle);
 	union task_union *aux = (union task_union*)pcb;
 	pcb->PID = 0;
 	allocate_DIR(pcb);
-	unsigned long *stack = (unsigned long *)aux + 0x1000;
+	aux->stack[KERNEL_STACK_SIZE-1] = (unsigned long)&cpu_idle;
+	aux->stack[KERNEL_STACK_SIZE-2] = 0;
+	pcb->kernel_esp = &(aux->stack[KERNEL_STACK_SIZE-2]);
+	/*unsigned long *stack = (unsigned long *)aux + 0x1000;
 	--stack;
-	*stack = (unsigned long *)cpu_idle;
+	*stack = (unsigned long)&cpu_idle;
 	--stack;
 	*stack = 0;
-	pcb->kernel_esp = stack;
+	pcb->kernel_esp = stack;*/
 	idle_task = pcb;
 }
 
-void init_task1(void)
-{
+void init_task1(void) {
+	struct list_head *init = list_first(&freequeue);
+	list_del(init);
+	struct task_struct *pcb = list_head_to_task_struct(init);
+	union task_union *aux = (union task_union*)pcb;
+	pcb->PID = 1;
+	allocate_DIR(pcb);
+	set_user_pages(pcb);
+	tss.esp0 = (unsigned long)&(aux->stack[KERNEL_STACK_SIZE]);
+	set_cr3(pcb->dir_pages_baseAddr);
 }
 
 

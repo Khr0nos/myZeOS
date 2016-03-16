@@ -45,6 +45,23 @@ int strlen(char *a)
   return i;
 }
 
+int getpid() {
+  int ret;
+
+  __asm__ __volatile__(
+    "int $0x80 \t\n"
+    : "=g" (ret)
+    : "a" (20)
+  );
+
+  if (ret < 0) {
+    errno = -ret;
+    ret = -1; 
+  }
+
+  return ret;
+}
+
 int gettime() {
   int ret;
 
