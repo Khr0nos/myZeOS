@@ -25,6 +25,7 @@ struct task_struct *idle_task;
 extern struct list_head blocked;
 struct list_head freequeue;
 struct list_head readyqueue;
+extern int globalPID = 19;
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -87,6 +88,7 @@ void init_task1(void) {
 	pcb->PID = 1;
 	allocate_DIR(pcb);
 	set_user_pages(pcb);
+	//pcb->kernel_esp = &(aux->stack[KERNEL_STACK_SIZE]);
 	tss.esp0 = (unsigned long)&(aux->stack[KERNEL_STACK_SIZE]);
 	set_cr3(pcb->dir_pages_baseAddr);
 }
@@ -112,3 +114,41 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
+void task_switch(union task_union*t) {
+	__asm__ __volatile__(
+		"pushl %esi \t\n"
+		"pushl %edi \t\n"
+		"pushl %ebx \t\n"
+	);
+	inner_task_switch(t);
+	__asm__ __volatile__(
+		"popl %ebx \t\n"
+		"popl %edi \t\n"
+		"popl %esi \t\n"
+	);
+}
+
+void inner_task_switch(union task_union*t) {
+	page_table_entry *nou_DIR = get_DIR(&t->task);
+	tss.esp0 = (unsigned long)&(t->stack[KERNEL_STACK_SIZE]);
+	set_cr3(nou_DIR);
+
+	__asm__ __volatile__(
+		"movl %%ebp, %0 \t\n"
+		: "=g" (current()->kernel_esp)
+		: /* no input */
+	);
+
+	__asm__ __volatile__(
+		"movl %0, %%esp \t\n"
+		: /* no output */
+		: "g" (t->task.kernel_esp)
+	);
+
+	__asm__ __volatile__(
+		"popl %%ebp \t\n"
+		"ret \t\n"
+		:
+		:
+	);
+}

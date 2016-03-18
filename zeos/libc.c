@@ -45,6 +45,23 @@ int strlen(char *a)
   return i;
 }
 
+int fork() {
+  int ret;
+
+  __asm__ __volatile__(
+    "int $0x80 \t\n"
+    : "=g" (ret)
+    : "a" (2)
+  );
+
+  if (ret < 0) {
+    errno = -ret;
+    ret = -1; 
+  }
+
+  return ret;
+}
+
 int getpid() {
   int ret;
 

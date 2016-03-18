@@ -11,11 +11,11 @@ int __attribute__ ((__section__(".text.main")))
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
     int ret = write(1, "\n\nProva de write", strlen("\n\nProva de write"));
     if (ret < 0) perror();
-    /*int p = getpid();
+    int p = getpid();
     if (p < 0) perror();
     itoa(p,buff);
     write(1,"\nProces amb PID ",strlen("\nProces amb PID "));
-    write(1,buff, strlen(buff));*/
+    write(1,buff, strlen(buff));
     //runjp();
   	while(1);
   	return 0;

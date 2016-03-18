@@ -59,11 +59,10 @@ int sys_write(int fd, char* buffer, int size) {
     return ret;
 }
 
-int sys_fork()
-{
-  int PID=-1;
+int sys_fork() {
+  int PID = ++globalPID;
 
-  // creates the child process
+  
   
   return PID;
 }
