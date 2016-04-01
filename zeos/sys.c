@@ -59,12 +59,63 @@ int sys_write(int fd, char* buffer, int size) {
     return ret;
 }
 
-int sys_fork() {
-  int PID = ++globalPID;
+int ret_from_fork() {
+  return 0;
+}
 
+int sys_fork() {
+  int pid = ++globalPID;
+
+  if (list_empty(&freequeue)) return -EAGAIN;
+  struct list_head *lliure = list_first(&freequeue);
+  list_del(lliure);
+
+  struct task_struct *child_pcb = list_head_to_task_struct(lliure);
+  struct task_struct *act = current();
+  union task_union *child = (union task_union*)child_pcb;
+  union task_union *father = (union task_union*)act;
+  copy_data(father, child, sizeof(union task_union));
+
+  child_pcb->PID = pid;
+  allocate_DIR(child_pcb);
+
+  page_table_entry *child_PT = get_PT(child_pcb);
+  Byte phys_page[NUM_PAG_DATA]; int i;
+  for (i = 0; i < NUM_PAG_DATA; ++i) {
+    phys_page[i] = alloc_frame();
+
+    if (phys_page[i] < 0) {
+      --i;
+      for (; i >= 0; --i) {
+        del_ss_pag(child_PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE);
+        free_frame(phys_page[i]);
+      }
+      list_add(lliure, &freequeue);
+      return -ENOMEM;
+    } else {
+      set_ss_pag(child_PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE, phys_page[i]);
+    }
+  }
   
-  
-  return PID;
+  page_table_entry *father_PT = get_PT(act);
+  for (i = 0; i < NUM_PAG_KERNEL+NUM_PAG_CODE; ++i) {
+    set_ss_pag(child_PT, i, get_frame(father_PT, i));
+  }
+
+  for (i = NUM_PAG_KERNEL+NUM_PAG_CODE; i < NUM_PAG_DATA; ++i) {
+    set_ss_pag(father_PT, i+NUM_PAG_DATA, phys_page[i]);
+    copy_data((void *)(i<<12), (void *)((i+NUM_PAG_DATA)<<12), PAGE_SIZE);
+    del_ss_pag(father_PT, i+NUM_PAG_DATA);
+  }
+  set_cr3(get_DIR(act));
+
+
+
+
+
+
+  list_add(lliure, &readyqueue);
+  return pid;
 }
 
 void sys_exit()

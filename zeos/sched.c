@@ -25,7 +25,7 @@ struct task_struct *idle_task;
 extern struct list_head blocked;
 struct list_head freequeue;
 struct list_head readyqueue;
-extern int globalPID = 19;
+int globalPID = 19;
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 

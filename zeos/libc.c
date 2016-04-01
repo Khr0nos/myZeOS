@@ -119,6 +119,14 @@ void perror() {
       write(1, "Function not implemented", strlen("Function not implemented"));
     break;
 
+    case EAGAIN:
+      write(1, "No PCB available, try later", strlen("No PCB available, try later"));
+    break;
+
+    case ENOMEM:
+      write(1, "Out of memory", strlen("Out of memory"));
+    break;
+
     case EBADF:
       write(1, "Bad file descriptor", strlen("Bad file descriptor"));
     break;
