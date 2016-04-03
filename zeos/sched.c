@@ -67,6 +67,7 @@ void init_idle (void) {
 	struct task_struct *pcb = list_head_to_task_struct(idle);
 	union task_union *aux = (union task_union*)pcb;
 	pcb->PID = 0;
+	pcb->quantum = QUANT;
 	allocate_DIR(pcb);
 	aux->stack[KERNEL_STACK_SIZE-1] = (unsigned long)&cpu_idle;
 	aux->stack[KERNEL_STACK_SIZE-2] = 0;
@@ -86,9 +87,12 @@ void init_task1(void) {
 	struct task_struct *pcb = list_head_to_task_struct(init);
 	union task_union *aux = (union task_union*)pcb;
 	pcb->PID = 1;
+	pcb->quantum = QUANT;
+	current_quantum = QUANT;
+	pcb->estat = ST_RUN;
 	allocate_DIR(pcb);
 	set_user_pages(pcb);
-	//pcb->kernel_esp = &(aux->stack[KERNEL_STACK_SIZE]);
+	pcb->kernel_esp = &(aux->stack[KERNEL_STACK_SIZE]);
 	tss.esp0 = (unsigned long)&(aux->stack[KERNEL_STACK_SIZE]);
 	set_cr3(pcb->dir_pages_baseAddr);
 }
@@ -151,4 +155,53 @@ void inner_task_switch(union task_union*t) {
 		:
 		:
 	);
+}
+
+int get_quantum(struct task_struct *t) {
+	return t->quantum;
+}
+
+void set_quantum(struct task_struct *t, int new_quantum) {
+	t->quantum = new_quantum;
+}
+
+void schedule() {
+	update_sched_data_rr();
+	if (needs_sched_rr()) {
+		update_process_state_rr(current(), &readyqueue);
+		sched_next_rr();
+	}
+}
+
+void sched_next_rr() {
+	struct task_struct *next;
+	if (list_empty(&readyqueue)) next = idle_task;
+	else {
+		struct list_head *n = list_first(&readyqueue);
+		list_del(n);
+		next = list_head_to_task_struct(n);
+	}
+	next->estat = ST_RUN;
+	current_quantum = get_quantum(next);
+
+	task_switch((union task_union*)next);
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
+	if (t->estat != ST_RUN) list_del(&(t->list));
+	if (dest != NULL) {
+		list_add(&(t->list), dest);
+		t->estat = ST_READY;
+	}
+	else t->estat = ST_RUN;
+}
+
+int needs_sched_rr() {
+	if (current_quantum == 0 && !list_empty(&readyqueue)) return 1;
+	if (current_quantum == 0) current_quantum = QUANT;
+	return 0;
+}
+
+void update_sched_data_rr() {
+	--current_quantum;
 }
