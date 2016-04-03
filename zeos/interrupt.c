@@ -104,4 +104,5 @@ void keyboard_routine() {
 void clock_routine() {
   ++zeos_tick;
   zeos_show_clock();
+  schedule();
 }

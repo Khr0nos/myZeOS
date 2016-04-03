@@ -15,6 +15,8 @@
 
 #include <errno.h>
 
+#include <stats.h>
+
 #define LECTURA 0
 #define ESCRIPTURA 1
 #define buff_size 512
@@ -77,6 +79,8 @@ int sys_fork() {
   copy_data(father, child, sizeof(union task_union));
 
   child_pcb->PID = pid;
+  child_pcb->quantum = QUANT;
+  child_pcb->estat = ST_READY;
   allocate_DIR(child_pcb);
 
   page_table_entry *child_PT = get_PT(child_pcb);
@@ -109,15 +113,31 @@ int sys_fork() {
   }
   set_cr3(get_DIR(act));
 
+  unsigned long *child_ebp = (act->kernel_esp - (unsigned long)act) + (unsigned long)child;
+
+  *child_ebp = (unsigned long)&ret_from_fork;
+  --child_ebp;
+  *child_ebp = 0;
+  child_pcb->kernel_esp = child_ebp;
 
 
 
-
-
-  list_add(lliure, &readyqueue);
+  list_add(&(child_pcb->list), &readyqueue);
   return pid;
 }
 
-void sys_exit()
-{  
+void sys_exit() {
+  int i; page_table_entry *PT = get_PT(current());
+  for (i = 0; i < NUM_PAG_DATA; ++i) {
+    free_frame(get_frame(PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE));
+    del_ss_pag(PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE);
+  }
+
+  list_add(&(current()->list), &freequeue);
+
+  sched_next_rr();
+}
+
+int sys_get_stats(int pid, struct stats *st) {
+  return -1;
 }

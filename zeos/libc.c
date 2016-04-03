@@ -45,6 +45,33 @@ int strlen(char *a)
   return i;
 }
 
+int get_stats(int pid, struct stats *st) {
+  int ret;
+
+  __asm__ __volatile__(
+    "int $0x80 \t\n"
+    : "=g" (ret)
+    : "b" (pid), "c" (st), "a" (35)
+  );
+
+  if (ret < 0) {
+    errno = -ret;
+    ret = -1; 
+  }
+
+  return ret;
+}
+
+void exit() {
+
+  __asm__ __volatile__(
+    "int $0x80 \t\n"
+    :
+    : "a" (1)
+  );
+
+}
+
 int fork() {
   int ret;
 
