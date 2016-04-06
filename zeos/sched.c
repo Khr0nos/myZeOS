@@ -5,6 +5,7 @@
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
+#include <utils.h>
 
 /**
  * Container for the Task array and 2 additional pages (the first and the last one)
@@ -25,7 +26,18 @@ struct task_struct *idle_task;
 extern struct list_head blocked;
 struct list_head freequeue;
 struct list_head readyqueue;
-int globalPID = 19;
+int globalPID = 15;
+int current_quantum;
+
+void init_stats(struct stats *st) {
+	st->user_ticks = 0;
+	st->system_ticks = 0;
+	st->blocked_ticks = 0;
+	st->ready_ticks = 0;
+	st->elapsed_total_ticks = get_ticks();
+	st->total_trans = 0;
+	st->remaining_ticks = 0;
+}
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -68,10 +80,11 @@ void init_idle (void) {
 	union task_union *aux = (union task_union*)pcb;
 	pcb->PID = 0;
 	pcb->quantum = QUANT;
+	init_stats(&pcb->proc_stats);
 	allocate_DIR(pcb);
 	aux->stack[KERNEL_STACK_SIZE-1] = (unsigned long)&cpu_idle;
 	aux->stack[KERNEL_STACK_SIZE-2] = 0;
-	pcb->kernel_esp = &(aux->stack[KERNEL_STACK_SIZE-2]);
+	pcb->kernel_esp = (int)&(aux->stack[KERNEL_STACK_SIZE-2]);
 	/*unsigned long *stack = (unsigned long *)aux + 0x1000;
 	--stack;
 	*stack = (unsigned long)&cpu_idle;
@@ -89,10 +102,11 @@ void init_task1(void) {
 	pcb->PID = 1;
 	pcb->quantum = QUANT;
 	current_quantum = QUANT;
+	init_stats(&pcb->proc_stats);
 	pcb->estat = ST_RUN;
 	allocate_DIR(pcb);
 	set_user_pages(pcb);
-	pcb->kernel_esp = &(aux->stack[KERNEL_STACK_SIZE]);
+	pcb->kernel_esp = (int)&(aux->stack[KERNEL_STACK_SIZE]);
 	tss.esp0 = (unsigned long)&(aux->stack[KERNEL_STACK_SIZE]);
 	set_cr3(pcb->dir_pages_baseAddr);
 }
@@ -102,7 +116,7 @@ void init_sched(){
 	INIT_LIST_HEAD(&freequeue);
 	int i;
 	for (i = 0; i < NR_TASKS; i++) {
-		list_add(&(task[i].task.list), &freequeue);
+		list_add_tail(&(task[i].task.list), &freequeue);
 	}
 	INIT_LIST_HEAD(&readyqueue);
 }
@@ -190,7 +204,7 @@ void sched_next_rr() {
 void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 	if (t->estat != ST_RUN) list_del(&(t->list));
 	if (dest != NULL) {
-		list_add(&(t->list), dest);
+		list_add_tail(&(t->list), dest);
 		t->estat = ST_READY;
 	}
 	else t->estat = ST_RUN;
@@ -198,7 +212,7 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 
 int needs_sched_rr() {
 	if (current_quantum == 0 && !list_empty(&readyqueue)) return 1;
-	if (current_quantum == 0) current_quantum = QUANT;
+	if (current_quantum == 0) current_quantum = get_quantum(current());
 	return 0;
 }
 

@@ -17,22 +17,36 @@ int __attribute__ ((__section__(".text.main")))
     write(1,"\nProces amb PID ",strlen("\nProces amb PID "));
     write(1,buff, strlen(buff));*/
     //runjp();
-    runjp_rank(7,19);
-    /*int p = fork();
+    //runjp_rank(30,31);
+    int p = fork();
     if (p < 0) perror();
     if (p == 0) {
-      int i;
-      for (i = 0; i < 1000000; ++i){}
       p = getpid();
       itoa(p, buff);
-      write(1,"\nEl meu PID ",strlen("\nEl meu PID "));
+      write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
+      p = fork();
+      if (p < 0) perror();
+      if (p == 0) {
+        p = getpid();
+        itoa(p, buff);
+        write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
+        write(1,buff, strlen(buff));
+      } else {
+        itoa(p, buff);
+        write(1,"\nEl PID del net es ",strlen("\nEl PID del net es "));
+        write(1,buff, strlen(buff));
+      }
       exit();
     } else {
       itoa(p, buff);
-      write(1,"\nFill amb PID ",strlen("\nFill amb PID "));
+      write(1,"\nEl PID del meu fill es ",strlen("\nEl PID del meu fill es "));
       write(1,buff, strlen(buff));
-    }*/
+      p = getpid();
+      itoa(p, buff);
+      write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
+      write(1,buff, strlen(buff));
+    }
   	while(1);
   	return 0;
 }

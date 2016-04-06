@@ -66,7 +66,7 @@ int ret_from_fork() {
 }
 
 int sys_fork() {
-  int pid = ++globalPID;
+  int pid = (globalPID+=5);
 
   if (list_empty(&freequeue)) return -EAGAIN;
   struct list_head *lliure = list_first(&freequeue);
@@ -80,6 +80,7 @@ int sys_fork() {
 
   child_pcb->PID = pid;
   child_pcb->quantum = QUANT;
+  init_stats(&child_pcb->proc_stats);
   child_pcb->estat = ST_READY;
   allocate_DIR(child_pcb);
 
@@ -94,7 +95,7 @@ int sys_fork() {
         del_ss_pag(child_PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE);
         free_frame(phys_page[i]);
       }
-      list_add(lliure, &freequeue);
+      list_add_tail(lliure, &freequeue);
       return -ENOMEM;
     } else {
       set_ss_pag(child_PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE, phys_page[i]);
@@ -106,23 +107,29 @@ int sys_fork() {
     set_ss_pag(child_PT, i, get_frame(father_PT, i));
   }
 
-  for (i = NUM_PAG_KERNEL+NUM_PAG_CODE; i < NUM_PAG_DATA; ++i) {
-    set_ss_pag(father_PT, i+NUM_PAG_DATA, phys_page[i]);
+  for (i = NUM_PAG_KERNEL+NUM_PAG_CODE; i < NUM_PAG_DATA+NUM_PAG_KERNEL+NUM_PAG_CODE; ++i) {
+    set_ss_pag(father_PT, i+NUM_PAG_DATA, get_frame(child_PT, i));
     copy_data((void *)(i<<12), (void *)((i+NUM_PAG_DATA)<<12), PAGE_SIZE);
     del_ss_pag(father_PT, i+NUM_PAG_DATA);
   }
   set_cr3(get_DIR(act));
 
-  unsigned long *child_ebp = (act->kernel_esp - (unsigned long)act) + (unsigned long)child;
+  int ebp;
+  __asm__ __volatile__(
+    "movl %%ebp, %0 \t\n"
+    : "=g" (ebp)
+    :
+  );
+  int child_ebp = (ebp - (int)act) + (int)child;
 
-  *child_ebp = (unsigned long)&ret_from_fork;
-  --child_ebp;
-  *child_ebp = 0;
+  *(unsigned long*)child_ebp = (unsigned long)&ret_from_fork;
+  child_ebp -= sizeof(unsigned long);
+  *(unsigned long*)child_ebp = 0;
   child_pcb->kernel_esp = child_ebp;
 
 
 
-  list_add(&(child_pcb->list), &readyqueue);
+  list_add_tail(&(child_pcb->list), &readyqueue);
   return pid;
 }
 
@@ -133,7 +140,7 @@ void sys_exit() {
     del_ss_pag(PT, i+NUM_PAG_KERNEL+NUM_PAG_CODE);
   }
 
-  list_add(&(current()->list), &freequeue);
+  list_add_tail(&(current()->list), &freequeue);
 
   sched_next_rr();
 }

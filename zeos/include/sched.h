@@ -12,7 +12,7 @@
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
-#define QUANT 10
+#define QUANT 100
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
@@ -20,9 +20,10 @@ struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
   struct list_head list;
-  unsigned long *kernel_esp;
+  int kernel_esp;
   int quantum;
   enum state_t estat;
+  struct stats proc_stats;
 };
 
 union task_union {
@@ -36,13 +37,15 @@ extern struct task_struct *idle_task;
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
 extern int globalPID;
-int current_quantum;
+
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 
 #define INITIAL_ESP       	KERNEL_ESP(&task[1])
 
 /* Inicialitza les dades del proces inicial */
+void init_stats(struct stats *st);
+
 void init_task1(void);
 
 void init_idle(void);
