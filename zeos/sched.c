@@ -36,7 +36,7 @@ void init_stats(struct stats *st) {
 	st->ready_ticks = 0;
 	st->elapsed_total_ticks = get_ticks();
 	st->total_trans = 0;
-	st->remaining_ticks = QUANT;
+	st->remaining_ticks = current_quantum;
 }
 
 /* get_DIR - Returns the Page Directory address for task 't' */
@@ -220,3 +220,7 @@ int needs_sched_rr() {
 void update_sched_data_rr() {
 	--current_quantum;
 }
+
+void user_to_system() {}
+
+void system_to_user() {}

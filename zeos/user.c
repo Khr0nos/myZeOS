@@ -3,6 +3,7 @@
 char buff[24];
 
 int pid; int errno;
+struct stats s;
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
@@ -16,9 +17,11 @@ int __attribute__ ((__section__(".text.main")))
     itoa(p,buff);
     write(1,"\nProces amb PID ",strlen("\nProces amb PID "));
     write(1,buff, strlen(buff));*/
-    runjp();
-    //runjp_rank(13,19);
-    /*pid = fork();
+    //runjp();
+    //runjp_rank(0,5);
+    
+    
+    pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
       pid = getpid();
@@ -37,6 +40,15 @@ int __attribute__ ((__section__(".text.main")))
         itoa(pid, buff);
         write(1,"\nEl PID del net es ",strlen("\nEl PID del net es "));
         write(1,buff, strlen(buff));
+        /*write(1, "\n", strlen("\n"));
+        pid = get_stats(getpid(), &s);
+        if (pid < 0) perror();
+        itoa(s.elapsed_total_ticks, buff);
+        write(1, buff, strlen(buff));
+        write(1, "\n", strlen("\n"));
+        itoa(s.remaining_ticks, buff);
+        write(1, buff, strlen(buff));
+        write(1, "\n", strlen("\n"));*/
         exit();
       }
     } else {
@@ -47,7 +59,7 @@ int __attribute__ ((__section__(".text.main")))
       itoa(pid, buff);
       write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
-    }*/
+    }
   	while(1);
   	return 0;
 }
