@@ -79,13 +79,13 @@ int sys_fork() {
   copy_data(father, child, sizeof(union task_union));
 
   child_pcb->PID = pid;
-  child_pcb->quantum = QUANT;
+  child_pcb->quantum = act->quantum;
   init_stats(&child_pcb->proc_stats);
   child_pcb->estat = ST_READY;
   allocate_DIR(child_pcb);
 
   page_table_entry *child_PT = get_PT(child_pcb);
-  Byte phys_page[NUM_PAG_DATA]; int i;
+  int phys_page[NUM_PAG_DATA]; int i;
   for (i = 0; i < NUM_PAG_DATA; ++i) {
     phys_page[i] = alloc_frame();
 
@@ -108,7 +108,7 @@ int sys_fork() {
   }
 
   for (i = NUM_PAG_KERNEL+NUM_PAG_CODE; i < NUM_PAG_DATA+NUM_PAG_KERNEL+NUM_PAG_CODE; ++i) {
-    set_ss_pag(father_PT, i+NUM_PAG_DATA, get_frame(child_PT, i));
+    set_ss_pag(father_PT, i+NUM_PAG_DATA, phys_page[i-NUM_PAG_KERNEL-NUM_PAG_CODE]);     //get_frame(child_PT, i)
     copy_data((void *)(i<<12), (void *)((i+NUM_PAG_DATA)<<12), PAGE_SIZE);
     del_ss_pag(father_PT, i+NUM_PAG_DATA);
   }
@@ -146,5 +146,15 @@ void sys_exit() {
 }
 
 int sys_get_stats(int pid, struct stats *st) {
-  return -1;
+  if (pid < 1) return -EINVAL;
+  if (!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -EFAULT;
+
+  int i;
+  for (i = 0; i < NR_TASKS; i++) {
+    if (task[i].task.PID == pid) {
+      copy_to_user(&(task[i].task.proc_stats), st, sizeof(struct stats));
+      return 0;
+    }
+  }
+  return -ESRCH;
 }

@@ -36,7 +36,7 @@ void init_stats(struct stats *st) {
 	st->ready_ticks = 0;
 	st->elapsed_total_ticks = get_ticks();
 	st->total_trans = 0;
-	st->remaining_ticks = 0;
+	st->remaining_ticks = QUANT;
 }
 
 /* get_DIR - Returns the Page Directory address for task 't' */
@@ -116,6 +116,7 @@ void init_sched(){
 	INIT_LIST_HEAD(&freequeue);
 	int i;
 	for (i = 0; i < NR_TASKS; i++) {
+		task[i].task.PID = -1;
 		list_add_tail(&(task[i].task.list), &freequeue);
 	}
 	INIT_LIST_HEAD(&readyqueue);

@@ -146,6 +146,10 @@ void perror() {
       write(1, "Function not implemented", strlen("Function not implemented"));
     break;
 
+    case EACCES:
+      write(1, "Permission denied", strlen("Permission denied"));
+    break;
+
     case EAGAIN:
       write(1, "No PCB available, try later", strlen("No PCB available, try later"));
     break;
