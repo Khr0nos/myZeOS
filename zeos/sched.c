@@ -36,7 +36,7 @@ void init_stats(struct stats *st) {
 	st->ready_ticks = 0;
 	st->elapsed_total_ticks = get_ticks();
 	st->total_trans = 0;
-	st->remaining_ticks = current_quantum;
+	st->remaining_ticks = QUANT;
 }
 
 /* get_DIR - Returns the Page Directory address for task 't' */
@@ -198,6 +198,11 @@ void sched_next_rr() {
 	}
 	next->estat = ST_RUN;
 	current_quantum = get_quantum(next);
+	unsigned long now = get_ticks();
+	next->proc_stats.ready_ticks += (now - next->proc_stats.elapsed_total_ticks);
+	next->proc_stats.elapsed_total_ticks = now;
+	next->proc_stats.total_trans += 1;
+	next->proc_stats.remaining_ticks = current_quantum;
 
 	task_switch((union task_union*)next);
 }
@@ -207,20 +212,37 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 	if (dest != NULL) {
 		list_add_tail(&(t->list), dest);
 		t->estat = ST_READY;
+		unsigned long now = get_ticks();
+		t->proc_stats.system_ticks += (now - t->proc_stats.elapsed_total_ticks);
+		t->proc_stats.elapsed_total_ticks = now;
 	}
 	else t->estat = ST_RUN;
 }
 
 int needs_sched_rr() {
 	if (current_quantum == 0 && !list_empty(&readyqueue)) return 1;
-	if (current_quantum == 0) current_quantum = get_quantum(current());
+	if (current_quantum == 0) {
+		current_quantum = get_quantum(current());
+		current()->proc_stats.remaining_ticks = current_quantum;
+	}
 	return 0;
 }
 
 void update_sched_data_rr() {
 	--current_quantum;
+	current()->proc_stats.remaining_ticks -= 1;
 }
 
-void user_to_system() {}
+void user_to_system() {
+	struct task_struct *t = current();
+	unsigned long now = get_ticks();
+	t->proc_stats.user_ticks += (now - t->proc_stats.elapsed_total_ticks);
+	t->proc_stats.elapsed_total_ticks = now;
+}
 
-void system_to_user() {}
+void system_to_user() {
+	struct task_struct *t = current();
+	unsigned long now = get_ticks();
+	t->proc_stats.system_ticks += (now - t->proc_stats.elapsed_total_ticks);
+	t->proc_stats.elapsed_total_ticks = now;
+}

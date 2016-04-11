@@ -73,7 +73,13 @@
 ENTRY(keyboard_handler)
       SAVE_ALL
       EOI
+      pushl %eax
+      call user_to_system
+      popl %eax
       call keyboard_routine
+      pushl %eax
+      call system_to_user
+      popl %eax
       RESTORE_ALL
       iret
 
@@ -81,7 +87,13 @@ ENTRY(keyboard_handler)
 ENTRY(clock_handler)
       SAVE_ALL
       EOI
+      pushl %eax
+      call user_to_system
+      popl %eax
       call clock_routine
+      pushl %eax
+      call system_to_user
+      popl %eax
       RESTORE_ALL
       iret
 
@@ -92,7 +104,13 @@ ENTRY(system_call_handler)
       jl err
       cmpl $MAX_SYSCALL, %eax
       jg err
+      pushl %eax
+      call user_to_system
+      popl %eax
       call *sys_call_table(, %eax, 0x04)
+      pushl %eax
+      call system_to_user
+      popl %eax
       jmp fin
 err:
       movl $-ENOSYS, %eax

@@ -148,6 +148,11 @@ void sys_exit() {
 int sys_get_stats(int pid, struct stats *st) {
   if (pid < 1) return -EINVAL;
   if (!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -EFAULT;
+  struct list_head *e;
+  list_for_each(e, &freequeue) {
+    struct task_struct *pcb = list_head_to_task_struct(e);
+    if (pcb->PID == pid) return -ESRCH;
+  }
 
   int i;
   for (i = 0; i < NR_TASKS; i++) {
