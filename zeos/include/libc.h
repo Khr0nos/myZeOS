@@ -22,6 +22,12 @@ void exit();
 
 int write(int fd, char* buffer, int size);
 
+int read(int fd, char* buffer, int nbytes);
+
+int set_sched_policy(int policy);
+
+int get_stats(int pid, struct stats *st);
+
 void perror();
 
 #endif  /* __LIBC_H__ */

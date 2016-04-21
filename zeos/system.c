@@ -8,6 +8,7 @@
 #include <hardware.h>
 #include <system.h>
 #include <sched.h>
+#include <schedperf.h>
 #include <mm.h>
 #include <io.h>
 #include <utils.h>
@@ -86,6 +87,7 @@ int __attribute__((__section__(".text.main")))
   
   /* Initialize Scheduling */
   init_sched();
+  zeos_console_init();
 
   /* Initialize idle task  data */
   init_idle();
@@ -98,7 +100,7 @@ int __attribute__((__section__(".text.main")))
   
   printk("Entering user mode..."); 
   zeos_ticks = 0;
-  zeos_init_auxjp();
+  //zeos_init_auxjp();
   enable_int();
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges

@@ -18,10 +18,8 @@ int __attribute__ ((__section__(".text.main")))
     write(1,"\nProces amb PID ",strlen("\nProces amb PID "));
     write(1,buff, strlen(buff));*/
     //runjp();
-    runjp_rank(0,31);
-    
-    
-    /*pid = fork();
+    //runjp_rank(0,31);
+    pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
       pid = getpid();
@@ -43,6 +41,7 @@ int __attribute__ ((__section__(".text.main")))
         exit();
       }
     } else {
+      if (pid < 0) perror();
       write(1, "\nelapsed: \n", strlen("\nelapsed: \n"));
       pid = get_stats(getpid(), &s);
       if (pid < 0) perror();
@@ -64,7 +63,7 @@ int __attribute__ ((__section__(".text.main")))
       itoa(pid, buff);
       write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
-    }*/
+    }
   	while(1);
   	return 0;
 }
