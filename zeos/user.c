@@ -19,7 +19,9 @@ int __attribute__ ((__section__(".text.main")))
     write(1,buff, strlen(buff));*/
     //runjp();
     //runjp_rank(0,31);
-    pid = fork();
+    pid = set_sched_policy(FCFS);
+    if (pid < 0) perror();
+    /*pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
       pid = getpid();
@@ -63,7 +65,25 @@ int __attribute__ ((__section__(".text.main")))
       itoa(pid, buff);
       write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
+    }*/
+    char* buf = "something";
+    pid = fork();
+    if (pid < 0) perror();
+    if (pid == 0) {
+      int n = read(0, buf, 1000);
+      if (n < 0) perror();
+      else write(1, "\nchild Read OK\n", strlen("\nchild Read OK\n"));
+      pid = get_stats(getpid(), &s);
+      write(1, "\nblocked ticks: ", strlen("\nblocked ticks: "));
+      itoa(s.ready_ticks, buff);
+      write(1, buff, strlen(buff));
+      exit();
+    } else {
+      int n = read(0, buf, 100);
+      if (n < 0) perror();
+      else write(1, "\nfather Read OK\n", strlen("\nfather Read OK\n"));
     }
+    exit();
   	while(1);
   	return 0;
 }

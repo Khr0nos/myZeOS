@@ -6,6 +6,9 @@
 #ifndef __LIBC_H__
 #define __LIBC_H__
 
+#define RR 0
+#define FCFS 1
+
 #include <stats.h>
 
 int write(int fd, char *buffer, int size);
