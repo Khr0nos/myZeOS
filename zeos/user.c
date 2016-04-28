@@ -4,6 +4,24 @@ char buff[50];
 
 int pid; int errno;
 struct stats s;
+char* buf = "something";
+
+long inner(long n) {
+  int i;
+  long suma;
+  suma = 0;
+  for (i = 0; i < n; i++) suma += i;
+  return suma;
+}
+
+void workload() {
+  long acum;
+  int i;
+  acum = 0;
+  for (i = 0; i < 100; ++i) {
+    acum = acum + inner(i);
+  }
+}
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
@@ -19,8 +37,6 @@ int __attribute__ ((__section__(".text.main")))
     write(1,buff, strlen(buff));*/
     //runjp();
     //runjp_rank(0,31);
-    pid = set_sched_policy(FCFS);
-    if (pid < 0) perror();
     /*pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
@@ -66,16 +82,18 @@ int __attribute__ ((__section__(".text.main")))
       write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
     }*/
-    char* buf = "something";
+    pid = set_sched_policy(FCFS);
+    if (pid < 0) perror();
     pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
-      int n = read(0, buf, 1000);
+      workload();
+      int n = read(0, buf, 1500);
       if (n < 0) perror();
       else write(1, "\nchild Read OK\n", strlen("\nchild Read OK\n"));
       pid = get_stats(getpid(), &s);
       write(1, "\nblocked ticks: ", strlen("\nblocked ticks: "));
-      itoa(s.ready_ticks, buff);
+      itoa(s.blocked_ticks, buff);
       write(1, buff, strlen(buff));
       exit();
     } else {
