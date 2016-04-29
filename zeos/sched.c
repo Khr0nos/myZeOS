@@ -242,14 +242,17 @@ void sched_next_rr() {
 
 void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 	if (t->estat != ST_RUN) list_del(&(t->list));
-	if (dest != NULL) {
+	if (dest == &readyqueue) {
 		list_add_tail(&(t->list), dest);
 		t->estat = ST_READY;
 		unsigned long now = get_ticks();
 		t->proc_stats.system_ticks += (now - t->proc_stats.elapsed_total_ticks);
 		t->proc_stats.elapsed_total_ticks = now;
+	} else if (dest == NULL) t->estat = ST_RUN;
+	else {
+		list_add_tail(&(t->list), dest);
+		t->estat = ST_BLOCKED;
 	}
-	else t->estat = ST_RUN;
 }
 
 int needs_sched_rr() {
