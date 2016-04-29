@@ -234,8 +234,11 @@ void sched_next_rr() {
 	unsigned long now = get_ticks();
 	next->proc_stats.ready_ticks += (now - next->proc_stats.elapsed_total_ticks);
 	next->proc_stats.elapsed_total_ticks = now;
-	next->proc_stats.total_trans += 1;
+	next->proc_stats.total_trans++;
 	next->proc_stats.remaining_ticks = current_quantum;
+
+	current()->proc_stats.system_ticks += (now - current()->proc_stats.elapsed_total_ticks);
+	current()->proc_stats.elapsed_total_ticks = now;
 
 	task_switch((union task_union*)next);
 }
@@ -245,9 +248,7 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 	if (dest == &readyqueue) {
 		list_add_tail(&(t->list), dest);
 		t->estat = ST_READY;
-		unsigned long now = get_ticks();
-		t->proc_stats.system_ticks += (now - t->proc_stats.elapsed_total_ticks);
-		t->proc_stats.elapsed_total_ticks = now;
+		
 	} else if (dest == NULL) t->estat = ST_RUN;
 	else {
 		list_add_tail(&(t->list), dest);
@@ -260,6 +261,7 @@ int needs_sched_rr() {
 	if (current_quantum == 0) {
 		current_quantum = get_quantum(current());
 		current()->proc_stats.remaining_ticks = current_quantum;
+		current()->proc_stats.total_trans++;
 	}
 	return 0;
 }
