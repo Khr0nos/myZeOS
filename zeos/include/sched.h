@@ -78,4 +78,6 @@ void set_quantum(struct task_struct *t, int new_quantum);
 void user_to_system();
 void system_to_user();
 
+void zeos_init_auxjp();
+
 #endif  /* __SCHED_H__ */

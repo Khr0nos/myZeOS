@@ -12,6 +12,7 @@
 #include <mm_address.h>
 
 #include <sched.h>
+#include <schedperf.h>
 
 #include <errno.h>
 
@@ -142,7 +143,7 @@ void sys_exit() {
 
   list_add_tail(&(current()->list), &freequeue);
 
-  sched_next_rr();
+  sched_next();
 }
 
 int sys_get_stats(int pid, struct stats *st) {

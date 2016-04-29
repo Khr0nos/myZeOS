@@ -18,7 +18,7 @@ void workload() {
   long acum;
   int i;
   acum = 0;
-  for (i = 0; i < 100; ++i) {
+  for (i = 0; i < 10000; ++i) {
     acum = acum + inner(i);
   }
 }
@@ -36,7 +36,7 @@ int __attribute__ ((__section__(".text.main")))
     write(1,"\nProces amb PID ",strlen("\nProces amb PID "));
     write(1,buff, strlen(buff));*/
     //runjp();
-    //runjp_rank(0,31);
+    //runjp_rank(5,31);
     /*pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
@@ -60,6 +60,7 @@ int __attribute__ ((__section__(".text.main")))
       }
     } else {
       if (pid < 0) perror();
+      workload();
       write(1, "\nelapsed: \n", strlen("\nelapsed: \n"));
       pid = get_stats(getpid(), &s);
       if (pid < 0) perror();
@@ -82,16 +83,17 @@ int __attribute__ ((__section__(".text.main")))
       write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
     }*/
-    pid = set_sched_policy(FCFS);
+    //pid = set_sched_policy(RR);
     if (pid < 0) perror();
     pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
       workload();
-      int n = read(0, buf, 1500);
+      int n = read(0, buf, 2000);
       if (n < 0) perror();
       else write(1, "\nchild Read OK\n", strlen("\nchild Read OK\n"));
       pid = get_stats(getpid(), &s);
+      if (pid < 0) perror();
       write(1, "\nblocked ticks: ", strlen("\nblocked ticks: "));
       itoa(s.blocked_ticks, buff);
       write(1, buff, strlen(buff));
@@ -100,8 +102,14 @@ int __attribute__ ((__section__(".text.main")))
       int n = read(0, buf, 100);
       if (n < 0) perror();
       else write(1, "\nfather Read OK\n", strlen("\nfather Read OK\n"));
+      pid = get_stats(getpid(), &s);
+      if (pid < 0) perror();
+      write(1, "\nblocked ticks: ", strlen("\nblocked ticks: "));
+      itoa(s.blocked_ticks, buff);
+      write(1, buff, strlen(buff));
+      exit();
     }
-    exit();
+    
   	while(1);
   	return 0;
 }
