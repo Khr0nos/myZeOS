@@ -83,11 +83,8 @@ int __attribute__ ((__section__(".text.main")))
       write(1,"\nEl meu PID es ",strlen("\nEl meu PID es "));
       write(1,buff, strlen(buff));
     }*/
-<<<<<<< HEAD
     //pid = set_sched_policy(RR);
-=======
-    pid = set_sched_policy(RR);
->>>>>>> cb3fc41285bc37b3801f88aef8919187941ed218
+
     if (pid < 0) perror();
     pid = fork();
     if (pid < 0) perror();
@@ -113,11 +110,7 @@ int __attribute__ ((__section__(".text.main")))
       write(1, buff, strlen(buff));
       exit();
     }
-<<<<<<< HEAD
-    
-=======
-    //exit();
->>>>>>> cb3fc41285bc37b3801f88aef8919187941ed218
+
   	while(1);
   	return 0;
 }
