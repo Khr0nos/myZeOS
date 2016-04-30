@@ -12,7 +12,7 @@
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
-int zeos_tick;
+int zeos_ticks = 0;
 
 char char_map[] =
 {
@@ -103,7 +103,7 @@ void keyboard_routine() {
 }
 
 void clock_routine() {
-  ++zeos_tick;
+  ++zeos_ticks;
   zeos_show_clock();
   zeos_update_read_console_emul();
   schedule();

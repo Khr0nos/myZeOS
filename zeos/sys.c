@@ -21,7 +21,7 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 #define buff_size 512
-int zeos_ticks;
+extern int zeos_ticks;
 
 int check_fd(int fd, int permissions)
 {

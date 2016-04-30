@@ -202,7 +202,6 @@ void block_process(struct list_head *block_queue) {
 
 void unblock_process(struct task_struct *blocked) {
 	struct stats *st = get_task_stats(blocked);
-	//struct list_head *l = get_task_list(blocked);
 
 	update_process_state(blocked, &readyqueue);
 	st->blocked_ticks += (get_ticks() - st->elapsed_total_ticks);
@@ -271,16 +270,16 @@ void update_sched_data_rr() {
 	current()->proc_stats.remaining_ticks -= 1;
 }
 
-void user_to_system() {
-	struct task_struct *t = current();
-	unsigned long now = get_ticks();
-	t->proc_stats.user_ticks += (now - t->proc_stats.elapsed_total_ticks);
-	t->proc_stats.elapsed_total_ticks = now;
+void user_to_system(void) {
+  struct stats *st = get_task_stats(current());
+  unsigned long now = get_ticks();
+  st->user_ticks += (now - st->elapsed_total_ticks);
+  st->elapsed_total_ticks = now;
 }
 
-void system_to_user() {
-	struct task_struct *t = current();
-	unsigned long now = get_ticks();
-	t->proc_stats.system_ticks += (now - t->proc_stats.elapsed_total_ticks);
-	t->proc_stats.elapsed_total_ticks = now;
+void system_to_user(void) {
+  struct stats *st = get_task_stats(current());
+  unsigned long now = get_ticks();
+  st->system_ticks += (now - st->elapsed_total_ticks);
+  st->elapsed_total_ticks = now;
 }

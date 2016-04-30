@@ -108,13 +108,13 @@ ENTRY(system_call_handler)
       call user_to_system
       popl %eax
       call *sys_call_table(, %eax, 0x04)
-      pushl %eax
-      call system_to_user
-      popl %eax
       jmp fin
 err:
       movl $-ENOSYS, %eax
 fin:
       movl %eax, 0x18(%esp)
+      pushl %eax
+      call system_to_user
+      popl %eax
       RESTORE_ALL
       iret
