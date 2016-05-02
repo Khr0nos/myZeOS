@@ -29,37 +29,43 @@ void print_stats(int PID) {
   write(1, buff, strlen(buff));
 }
 
-int factorial(int n) {
+long factorial(int n) {
   if (n <= 1) return 1;
   return n*factorial(n-1);
 }
 
-int workload_CPU() {  //per a obtenir stats mesurables cal fer calculs aburdament grans (raonablement!)
-  int n, i;
+long workload_CPU() {
+  long n = 0;
+  int i;
   for (i = 0; i < 10000; ++i) {
-    n = factorial(10000);
+    n += factorial(10000);
   }
   return n;
 }
 
-int workload_forks() {
+long workload_mixed() {
   int i;
+  long n = 0;
   for (i = 0; i < 10000; ++i) {
-    int pid = fork();
-    //if (pid < 0) perror();
-    if (pid == 0) exit();
+    n += factorial(10000);
   }
-  return i;
+  for (i = 0; i < 10; ++i) {
+    int r = read(0, buf, 500);
+    if (r < 0) perror();
+    else write(1, "\nOK", strlen("\nOK"));
+  }
+  write(1, "\n", strlen("\n"));
+  return n;
 }
 
-int workload_blocks() {
-  //workload bloquejant
+int workload_blocking() {
   int i;
   for (i = 0; i < 10; ++i) {
-    int n = read(0, buf, 2000);
+    int n = read(0, buf, 500);
     if (n < 0) perror();
     else write(1, "\nOK", strlen("\nOK"));
   }
+  write(1, "\n", strlen("\n"));
   return i;
 }
 
@@ -68,31 +74,21 @@ int __attribute__ ((__section__(".text.main")))
 {
     /* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
-    pid = set_sched_policy(RR);
+    pid = set_sched_policy(FCFS);
     if (pid < 0) perror();
 
     pid = fork();
     if (pid < 0) perror();
     if (pid == 0) {
       pid = fork();
-      if (pid == 0) {
-        int f = workload_CPU(); //quan es provi un workload forçar utilització de resultats
-        itoa(f, buff);          //sino per la optimitzacio (-O2) el workload es com si no es fes
-        write(1, "\n", strlen("\n"));
-        write(1, buff, strlen(buff));
-        write(1, "\n", strlen("\n"));
-        print_stats(getpid());
-        exit();
-      } else {
-        int f = workload_CPU();
-        itoa(f, buff);
-        write(1, buff, strlen(buff));
-        write(1, "\n", strlen("\n"));
-        print_stats(getpid());
-        exit();
-      }
+      if (pid == 0) pid = fork();
+      long f = workload_mixed();
+      itoa(f, buff);
+      write(1, "\n", strlen("\n"));
+      print_stats(getpid());
+      exit();
     }
-
+    
     exit();
   	while(1);
   	return 0;
